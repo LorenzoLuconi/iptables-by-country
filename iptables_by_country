@@ -1,6 +1,7 @@
 #!/bin/bash
 
 BASEURL="http://www.ipdeny.com/ipblocks/data/countries"
+DOWNPROG="curl -s "
 
 usage() {
 	echo "Usage: $0 -c country" 1>&2;
@@ -22,3 +23,17 @@ shift $((OPTIND-1))
 if [ -z "${c}" ] ; then
     usage
 fi
+
+IPS=$($DOWNPROG $BASEURL/${c}.zone)
+
+CHAIN="COUNTRY_${c}"
+FILE=${c}.iptables
+
+echo "iptables -F $CHAIN" > $FILE 
+
+for ip in $IPS
+do
+    echo "iptables -A $CHAIN -s $ip -j DROP" >> $FILE 
+done
+echo "iptables -j RETURN" >> $FILE
+
