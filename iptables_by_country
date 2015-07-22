@@ -1,14 +1,19 @@
 #!/bin/bash
+set -x 
 
 BASEURL="http://www.ipdeny.com/ipblocks/data/countries"
 DOWNPROG="curl -s "
 
 usage() {
-	echo "Usage: $0 -c country [-t target] [-n chain name] [-l]" 1>&2;
+	echo
+	echo "Usage: $0 [-c country] [ -f input file ] [-t target] [-n chain name] [-l]" 1>&2;
+	echo "$0 -c country "
+	echo "$0 -f file_name -n chain_name "
+	echo
 	exit 1;
 }
 
-while getopts ":c:t:n:l" o; do
+while getopts ":c:t:n:lf:" o; do
     case "${o}" in
         c)
             COUNTRY=${OPTARG}
@@ -22,6 +27,9 @@ while getopts ":c:t:n:l" o; do
         l)
             LOAD=1
             ;;
+        f)
+            INFILE=${OPTARG}
+            ;;
         *)
             usage
             ;;
@@ -29,29 +37,41 @@ while getopts ":c:t:n:l" o; do
 done
 shift $((OPTIND-1))
 
+# OPTIONS: COUNTRY (-c) or INPUT FILE (-f) and CHAIN NAME (-n) must be specified
 if [ -z "${COUNTRY}" ] ; then
-    usage
+	if [ -z "${INFILE}" ] || [ -z ${CHAIN} ]; then
+    		usage
+	fi
 fi
 
 CHAIN="${CHAIN:-$COUNTRY}"
-FILE=${COUNTRY}.iptables
+OUTFILE=${CHAIN}.iptables
 TARGET=${TARGET:-"DROP"}
 
 
 
-IPS=$($DOWNPROG $BASEURL/${c}.zone)
+if [ -z "${INFILE}" ]; then
+	IPS=$($DOWNPROG $BASEURL/${c}.zone)
+else
+	if [ -e "${INFILE}" ]; then
+		IPS=$(cat $INFILE)
+	else 
+		echo "[ERROR] FILE ${INFILE} not found"
+		exit 1
+	fi
+fi
 
-echo "*filter" > $FILE 
-echo ":${CHAIN} - [0:0]" >> $FILE 
+echo "*filter" > $OUTFILE 
+echo ":${CHAIN} - [0:0]" >> $OUTFILE 
 
 for ip in $IPS
 do
-    echo "-A $CHAIN -s $ip -j $TARGET" >> $FILE 
+    echo "-A $CHAIN -s $ip -j $TARGET" >> $OUTFILE 
 done
-echo "-A $CHAIN -j RETURN" >> $FILE
-echo "COMMIT" >> $FILE
+echo "-A $CHAIN -j RETURN" >> $OUTFILE
+echo "COMMIT" >> $OUTFILE
 
-if [ -n $LOAD ]; then
-	iptables-restore -n < $FILE
+if [ -n "${LOAD}" ]; then
+	iptables-restore -n < $OUTFILE
 fi
 
