@@ -4,17 +4,20 @@ BASEURL="http://www.ipdeny.com/ipblocks/data/countries"
 DOWNPROG="curl -s "
 
 usage() {
-	echo "Usage: $0 -c country -t target" 1>&2;
+	echo "Usage: $0 -c country [-t target] [-n chain name]" 1>&2;
 	exit 1;
 }
 
-while getopts ":c:" o; do
+while getopts ":c:t:n:" o; do
     case "${o}" in
         c)
-            c=${OPTARG}
+            COUNTRY=${OPTARG}
             ;;
         t)
-            t=${TARGET}
+            TARGET=${OPTARG}
+            ;;
+        n)
+            CHAIN=${OPTARG}
             ;;
         *)
             usage
@@ -23,12 +26,12 @@ while getopts ":c:" o; do
 done
 shift $((OPTIND-1))
 
-if [ -z "${c}" ] ; then
+if [ -z "${COUNTRY}" ] ; then
     usage
 fi
 
-CHAIN="${c}"
-FILE=${c}.iptables
+CHAIN="${CHAIN:-$COUNTRY}"
+FILE=${COUNTRY}.iptables
 TARGET=${TARGET:-"DROP"}
 
 
