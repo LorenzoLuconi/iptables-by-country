@@ -4,11 +4,11 @@ BASEURL="http://www.ipdeny.com/ipblocks/data/countries"
 DOWNPROG="curl -s "
 
 usage() {
-	echo "Usage: $0 -c country [-t target] [-n chain name]" 1>&2;
+	echo "Usage: $0 -c country [-t target] [-n chain name] [-l]" 1>&2;
 	exit 1;
 }
 
-while getopts ":c:t:n:" o; do
+while getopts ":c:t:n:l" o; do
     case "${o}" in
         c)
             COUNTRY=${OPTARG}
@@ -18,6 +18,9 @@ while getopts ":c:t:n:" o; do
             ;;
         n)
             CHAIN=${OPTARG}
+            ;;
+        l)
+            LOAD=1
             ;;
         *)
             usage
@@ -47,4 +50,8 @@ do
 done
 echo "-A $CHAIN -j RETURN" >> $FILE
 echo "COMMIT" >> $FILE
+
+if [ -n $LOAD ]; then
+	iptables-restore -n < $FILE
+fi
 
