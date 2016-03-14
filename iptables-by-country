@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x 
+# set -x 
 
 BASEURL="http://www.ipdeny.com/ipblocks/data/countries"
 DOWNPROG="curl -s "
@@ -51,7 +51,7 @@ TARGET=${TARGET:-"DROP"}
 
 
 if [ -z "${INFILE}" ]; then
-	IPS=$($DOWNPROG $BASEURL/${c}.zone)
+	IPS=$($DOWNPROG $BASEURL/${COUNTRY}.zone)
 else
 	if [ -e "${INFILE}" ]; then
 		IPS=$(cat $INFILE)
